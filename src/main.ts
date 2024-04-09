@@ -3,15 +3,17 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 const validationPipeService = require('@pipets/validation-pipes');
+import * as dotenv from 'dotenv';
 
 async function bootstrap() {
   try {
     validationPipeService();
-    
+    dotenv.config();
     const app = await NestFactory.create(AppModule);
 
     const config = new DocumentBuilder()
     .setTitle('Cats')
+    .addBearerAuth()
     .setDescription('The cats API description')
     .setVersion('1.0')
     .addServer('http://localhost:3000/', 'Local environment')

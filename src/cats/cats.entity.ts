@@ -1,11 +1,13 @@
+import { User } from 'src/user/user.entity';
 import {
   BaseEntity,
   Column,
   Entity,
+  ManyToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity('cats')
+@Entity({name: 'cats'})
 
 export class CatsEntity extends BaseEntity {
   @PrimaryGeneratedColumn({
@@ -27,4 +29,8 @@ export class CatsEntity extends BaseEntity {
     type: 'text',
   })
   name: string;
+
+   // ManyToMany relationship with User entity (referencing the same relationship from User)
+   @ManyToMany(() => User, (user) => user.cats)
+   users: User[]; // Array of User entities
 }

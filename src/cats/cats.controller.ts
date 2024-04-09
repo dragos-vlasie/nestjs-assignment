@@ -7,10 +7,11 @@ import { CreateCatDto } from './dto/create-cat.dto';
 import { Cat } from './interfaces/cat.interface';
 import { UpdateCatDto } from './dto/update-cat.dto';
 import { CatsEntity } from './cats.entity';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { ValidationPipe } from 'src/common/pipes/validation.pipe';
+import { ApiBearerAuth, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ValidationPipe } from '../common/pipes/validation.pipe';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
-@UseGuards(RolesGuard)
+// @UseGuards(RolesGuard) // Apply the RolesGuard to enable role-based access control
 @Controller('cats')
 @ApiTags('cats')
 export class CatsController {
@@ -18,7 +19,7 @@ export class CatsController {
 
   @Get()
   @ApiResponse({ status: 200, description: 'Array of cats' })
-  @ApiResponse({ status: 500, description: 'Internal server error' }) 
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async findAll(): Promise<Cat[]> {
     try {
       return await this.catsService.findAll();
@@ -28,9 +29,11 @@ export class CatsController {
   }
 
   @Post()
+  // @UseGuards(RolesGuard)
+  // @Roles(['admin', 'member', "ADMIN", "MEMBER"]) // Restrict access to users with the 'admin' role
   @ApiResponse({ status: 201, description: 'Cat created successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error' }) 
-  @UsePipes(ValidationPipe) 
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @UsePipes(ValidationPipe)
   async create(@Body() createCatDto: CreateCatDto): Promise<CatsEntity> {
     try {
       return await this.catsService.create(createCatDto);
@@ -53,8 +56,11 @@ export class CatsController {
   }
 
   @Put(':id')
+
+  @UseGuards(RolesGuard)
+  @Roles(['admin']) // Restrict access to users with the 'admin' role
   @ApiResponse({ status: 200, description: 'Cat details updated' })
-  @UsePipes(ValidationPipe) 
+  @UsePipes(ValidationPipe)
   async update(@Param('id', ParseIntPipe) id: number, @Body() updateCatDto: UpdateCatDto): Promise<CatsEntity> {
     const updatedCat = await this.catsService.update(id, updateCatDto);
     if (!updatedCat) {
@@ -64,12 +70,16 @@ export class CatsController {
   }
 
   @Delete(':id')
-  @ApiResponse({ status: 200, description: 'Cat successfully removed' })
+  @ApiBearerAuth()
+@ApiSecurity('bearer')
+@UseGuards(JwtAuthGuard)
+@UseGuards(RolesGuard)
+  @ApiResponse({ status: 200, description: 'Cat successfully removed', type: CatsEntity })
   async remove(@Param('id', new ParseIntPipe()) id: number): Promise<void> {
     try {
       await this.catsService.remove(id);
     } catch (error) {
-      if (error.message === 'Cat not found') { 
+      if (error.message === 'Cat not found') {
         throw new NotFoundException(error.message);
       } else {
         throw new HttpException(error.message || 'Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);

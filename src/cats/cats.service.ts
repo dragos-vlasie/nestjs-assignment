@@ -12,6 +12,7 @@ export class CatsService {
     private readonly catsRepository: Repository<CatsEntity>,
   ) { }
 
+
   async getOneById(id: number): Promise<CatsEntity> {
     const cat = await this.catsRepository.findOne({ where: { id } });
     if (!cat) {
