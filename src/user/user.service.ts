@@ -1,7 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserRegisterRequestDto } from './dto/user-register.req.dto';
 import { User } from './user.entity';
-import { Favorite } from './favorites.entity'; // Import Favorite entity
 import { FindOneOptions } from 'typeorm';
 import { CatsEntity } from 'src/cats/cats.entity';
 
