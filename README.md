@@ -38,14 +38,13 @@ Database Setup:
 Install PostgreSQL using Homebrew (if not already installed):
 
  ```bash
-brew install postgresql
-Start PostgreSQL service:
+brew install PostgreSQL
   ```
-
+Start PostgreSQL service:
 ```bash
 brew services start postgresql
-Set up your database and configure the connection in the .env file.
-  ```
+ ```
+ 
    Set up your database and configure the connection in the `.env` file.
 
 
@@ -58,10 +57,13 @@ npm run start
 ```
 
 The application will start running on http://localhost:3000/
+Endpoints are documented using swagger -> http://localhost:3000/api-docs
+
 ```bash
 $ npm run start:dev
-
+ ```
 # production mode
+ ```bash
 $ npm run start:prod
 ```
 
