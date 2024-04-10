@@ -6,7 +6,7 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LocalAuthGuard } from './local-auth.guard';
@@ -21,7 +21,8 @@ export class AuthController {
   @Post('login')
   @ApiCreatedResponse({ status: 201, description: 'User Logged in successfully' })
   async login(@Request() req, @Body() loginDto: LoginDto): Promise<any> {
-    return this.authService.generateToken(req.user);
+    const token =  this.authService.generateToken(req.user)
+    return {token, message: 'token created successfully'};
   }
 
   @ApiBearerAuth()

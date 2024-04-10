@@ -40,6 +40,10 @@ export class CatsService {
   }
 
   async remove(id: number): Promise<void> {
+    const cat = await this.getOneById(id);
+    if (!cat) {
+      throw new NotFoundException('Cat not found');
+    }
     await this.catsRepository.delete(id);
   }
 

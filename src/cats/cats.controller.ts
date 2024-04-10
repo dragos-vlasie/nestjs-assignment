@@ -1,26 +1,23 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, NotFoundException, Param, Post, Put, UseGuards, UsePipes } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, NotFoundException, Param, Post, Put, Request, UseGuards, UsePipes } from '@nestjs/common';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { ParseIntPipe } from '../common/pipes/parse-int.pipe';
 import { CatsService } from './cats.service';
 import { CreateCatDto } from './dto/create-cat.dto';
-import { Cat } from './interfaces/cat.interface';
 import { UpdateCatDto } from './dto/update-cat.dto';
 import { CatsEntity } from './cats.entity';
-import { ApiBearerAuth, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { ValidationPipe } from '../common/pipes/validation.pipe';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-// @UseGuards(RolesGuard) // Apply the RolesGuard to enable role-based access control
 @Controller('cats')
 @ApiTags('cats')
+@UseGuards(JwtAuthGuard)
 export class CatsController {
   constructor(private readonly catsService: CatsService) { }
 
   @Get()
-  @ApiResponse({ status: 200, description: 'Array of cats' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
-  async findAll(): Promise<Cat[]> {
+  async findAll(): Promise<CatsEntity[]> {
     try {
       return await this.catsService.findAll();
     } catch (error) {
@@ -28,12 +25,20 @@ export class CatsController {
     }
   }
 
+  @Get(':id')
+  async findOne(@Param('id', new ParseIntPipe()) id: number): Promise<CatsEntity> {
+    const cat = await this.catsService.getOneById(id);
+    if (!cat) {
+      throw new NotFoundException('Cat not found');
+    }
+    return cat;
+  }
+
   @Post()
-  // @UseGuards(RolesGuard)
-  // @Roles(['admin', 'member', "ADMIN", "MEMBER"]) // Restrict access to users with the 'admin' role
-  @ApiResponse({ status: 201, description: 'Cat created successfully' })
-  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiBearerAuth()
+  @UseGuards(RolesGuard)
   @UsePipes(ValidationPipe)
+  @Roles(['admin'])
   async create(@Body() createCatDto: CreateCatDto): Promise<CatsEntity> {
     try {
       return await this.catsService.create(createCatDto);
@@ -46,20 +51,10 @@ export class CatsController {
     }
   }
 
-  @Get(':id')
-  async findOne(@Param('id', new ParseIntPipe()) id: number): Promise<Cat> {
-    const cat = await this.catsService.getOneById(id);
-    if (!cat) {
-      throw new NotFoundException('Cat not found');
-    }
-    return cat;
-  }
-
   @Put(':id')
-
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
-  @Roles(['admin']) // Restrict access to users with the 'admin' role
-  @ApiResponse({ status: 200, description: 'Cat details updated' })
+  @Roles(['admin'])
   @UsePipes(ValidationPipe)
   async update(@Param('id', ParseIntPipe) id: number, @Body() updateCatDto: UpdateCatDto): Promise<CatsEntity> {
     const updatedCat = await this.catsService.update(id, updateCatDto);
@@ -71,13 +66,12 @@ export class CatsController {
 
   @Delete(':id')
   @ApiBearerAuth()
-@ApiSecurity('bearer')
-@UseGuards(JwtAuthGuard)
-@UseGuards(RolesGuard)
-  @ApiResponse({ status: 200, description: 'Cat successfully removed', type: CatsEntity })
-  async remove(@Param('id', new ParseIntPipe()) id: number): Promise<void> {
+  @UseGuards(RolesGuard)
+  @Roles(['admin'])
+  async remove(@Param('id', new ParseIntPipe()) id: number): Promise<{ removedCat: void; description: string; }> {
     try {
-      await this.catsService.remove(id);
+      const removedCat = await this.catsService.remove(id);
+      return { removedCat, description: 'Cat successfully removed' }
     } catch (error) {
       if (error.message === 'Cat not found') {
         throw new NotFoundException(error.message);

@@ -4,15 +4,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
   ManyToMany,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRoles } from './enums/user.enum';
-import { CatsEntity } from 'src/cats/cats.entity';
+import { CatsEntity } from '../cats/cats.entity';
 
 @Entity({ name: 'users' })
 export class User extends BaseEntity {
@@ -40,10 +40,6 @@ export class User extends BaseEntity {
   @Column({ type: 'enum', enum: UserRoles, default: UserRoles.MEMBER })
   role: UserRoles;
 
-  // ManyToMany relationship with Cat entity (users can have many cats and cats can belong to many users)
-  @ManyToMany(() => CatsEntity, (cat) => cat.users)
-  cats: CatsEntity[]; // Array of Cat entities
-
   @ApiProperty({ description: 'When user was created' })
   @CreateDateColumn()
   createdAt: Date;
@@ -51,6 +47,11 @@ export class User extends BaseEntity {
   @ApiProperty({ description: 'When user was updated' })
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // ManyToMany relationship with Cat entity (users can have many cats and cats can belong to many users)
+  @ManyToMany(() => CatsEntity, (cat) => cat.users)
+  @JoinTable()
+  cats: CatsEntity[]; // Array of Cat entities
 
   @BeforeInsert()
   async setPassword(password: string) {

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UserRegisterRequestDto } from './dto/user-register.req.dto';
 import { User } from './user.entity';
 import { FindOneOptions } from 'typeorm';
-import { CatsEntity } from 'src/cats/cats.entity';
+import { CatsEntity } from '../cats/cats.entity';
 
 @Injectable()
 export class UserService {
@@ -28,7 +28,7 @@ export class UserService {
   async addCatToUser(userId: number, catId: number): Promise<void> {
     const userOptions: FindOneOptions<User> = {
       where: { id: userId },
-      relations: ['cats'], // Include cats relation (optional, depending on your needs)
+      relations: ['cats'], // Include cats relation 
     };
   
     const user = await User.findOne(userOptions);
@@ -43,7 +43,7 @@ export class UserService {
       throw new Error('Cat not found');
     }
   
-    // Check if the cat is already associated with the user (optional)
+    // Check if the cat is already associated with the user 
     const existingAssociation = user.cats.find((existingCat) => existingCat.id === catId);
     if (existingAssociation) {
       throw new Error('Cat already associated with this user');

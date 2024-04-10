@@ -1,4 +1,4 @@
-import { User } from 'src/user/user.entity';
+import { User } from '../user/user.entity';
 import {
   BaseEntity,
   Column,
@@ -31,6 +31,6 @@ export class CatsEntity extends BaseEntity {
   name: string;
 
    // ManyToMany relationship with User entity (referencing the same relationship from User)
-   @ManyToMany(() => User, (user) => user.cats)
+   @ManyToMany(() => User, (user) => user.cats, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
    users: User[]; // Array of User entities
 }
